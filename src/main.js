@@ -8,8 +8,8 @@
 // @TODO: Расчет выручки от операции
 function calculateSimpleRevenue(purchase, _product) {
        const discount = 1 - purchase.discount / 100;
-       const profit = purchase.sale_price * discount * purchase.quantity;
-       return profit;
+       const revenue = purchase.sale_price * discount * purchase.quantity;
+       return revenue;
 }
 
 /**
@@ -26,7 +26,7 @@ function calculateBonusByProfit(index, total, seller) {
        if (index === 0) {
               return profit * 0.15;
        } else if (index === 1 || index === 2) {
-              return profit * 0.1;
+              return profit * 0.10;
        } else if (index === total - 1) {
               return profit * 0.05;
        }
@@ -62,10 +62,6 @@ function analyzeSalesData(data, options) {
               throw new Error("Чего-то не хватает");
        }
 
-       if (!options || typeof options !== "object") {
-              throw new Error("Не переданы функции");
-       }
-
        // @TODO: Подготовка промежуточных данных для сбора статистики
        const sellerStats = data.sellers.map((seller) => ({
               id: seller.id,
@@ -77,24 +73,25 @@ function analyzeSalesData(data, options) {
        }));
 
        // @TODO: Индексация продавцов и товаров для быстрого доступа
-       const sellerIndex = Object.fromEntries(sellerStats.map((sellerStat) => [sellerStat.id, sellerStat]));
-       const productIndex = data.products.reduce(
-              (result, product) => ({
-                     ...result,
-                     [product.sku]: product,
-              }),
-              {}
+       const sellerIndex = Object.fromEntries(
+              sellerStats.map((sellerStat) => [sellerStat.id, sellerStat])
        );
+       const productIndex = new Map();
+    data.products.forEach(product => {
+        if (productIndex.has(product.sku)) {
+            console.warn(`Обнаружен дублирующийся SKU: ${product.sku}`);
+        }
+        productIndex.set(product.sku, product);
+    });
 
        // @TODO: Расчет выручки и прибыли для каждого продавца
        data.purchase_records.forEach((record) => {
               const seller = sellerIndex[record.seller_id];
 
               seller.sales_count++;
-              seller.revenue += record.total_amount - record.total_discount;
 
               record.items.forEach((item) => {
-                     const product = productIndex[item.sku];
+                     const product = productIndex.get(item.sku);
                      const cost = product.purchase_price * item.quantity;
                      const revenue = calculateRevenue(item, product);
                      const profit = revenue - cost;
