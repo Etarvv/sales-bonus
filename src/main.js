@@ -78,7 +78,7 @@ function analyzeSalesData(data, options) {
        );
        const productIndex = new Map();
     data.products.forEach(product => {
-        if (productIndex.has(product.sku, pdroduct)) {
+        if (productIndex.has(product.sku, product)) {
             console.warn(`Обнаружен дублирующийся SKU: ${product.sku}`);
         }
         productIndex.set(product.sku, product);
