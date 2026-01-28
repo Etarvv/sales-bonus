@@ -7,7 +7,7 @@
 
 // @TODO: Расчет выручки от операции
 function calculateSimpleRevenue(purchase, _product) {
-       const discount = 1 - purchase.discount / 100;
+       const discount = 1 - (purchase.discount / 100);
        const revenue = purchase.sale_price * discount * purchase.quantity;
        return revenue;
 }
@@ -27,7 +27,7 @@ function calculateBonusByProfit(index, total, seller) {
               return profit * 0.15;
        } else if (index === 1 || index === 2) {
               return profit * 0.10;
-       } else if (index === total - 1) {
+       } else if (index === total - 2) {
               return profit * 0.05;
        }
        return 0;
@@ -78,7 +78,7 @@ function analyzeSalesData(data, options) {
        );
        const productIndex = new Map();
     data.products.forEach(product => {
-        if (productIndex.has(product.sku)) {
+        if (productIndex.has(product.sku, pdroduct)) {
             console.warn(`Обнаружен дублирующийся SKU: ${product.sku}`);
         }
         productIndex.set(product.sku, product);
@@ -89,9 +89,10 @@ function analyzeSalesData(data, options) {
               const seller = sellerIndex[record.seller_id];
 
               seller.sales_count++;
+              seller.revenue += record.total_amount - record.total_discount;
 
               record.items.forEach((item) => {
-                     const product = productIndex.get(item.sku);
+                     const product = productIndex[item.sku];
                      const cost = product.purchase_price * item.quantity;
                      const revenue = calculateRevenue(item, product);
                      const profit = revenue - cost;
